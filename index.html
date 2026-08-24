@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sketchpad — Düşüncelerini Çiz</title>
+  <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fdf6ec;
+      --ink: #2d2926;
+      --accent: #e85d40;
+      --accent2: #4a90d9;
+      --accent3: #5cb85c;
+      --paper: #fff9f0;
+      --shadow: rgba(45, 41, 38, 0.08);
+    }
+
+    body {
+      font-family: 'Patrick Hand', cursive;
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Notebook lines background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        transparent, transparent 31px,
+        rgba(74, 144, 217, 0.08) 31px, rgba(74, 144, 217, 0.08) 32px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    section { position: relative; z-index: 1; }
+
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    h1, h2, h3 { font-family: 'Caveat', cursive; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 0;
+      backdrop-filter: blur(12px);
+      background: rgba(253, 246, 236, 0.85);
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Caveat', cursive;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 1.15rem;
+      position: relative;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 8px 22px;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { transform: rotate(-1deg) scale(1.04); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .hero-text h1 {
+      font-size: clamp(2.8rem, 6vw, 4.5rem);
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero-text h1 span { color: var(--accent); }
+    .hero-text p {
+      font-size: 1.25rem;
+      margin-bottom: 32px;
+      max-width: 460px;
+      opacity: 0.85;
+    }
+    .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 14px 36px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s;
+      border-radius: 4px;
+      position: relative;
+    }
+    .btn-primary:hover { transform: rotate(-2deg) scale(1.05); }
+
+    .btn-secondary {
+      display: inline-block;
+      padding: 14px 36px;
+      background: transparent;
+      color: var(--ink);
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s;
+      border-radius: 4px;
+    }
+    .btn-secondary:hover { transform: rotate(1deg) scale(1.04); }
+
+    .hero-canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+    }
+    #heroCanvas { width: 100%; height: 100%; }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 100px 0;
+      position: relative;
+    }
+    .features h2 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 60px;
+    }
+    .features h2 span { color: var(--accent2); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+    }
+    .feature-card {
+      position: relative;
+      padding: 36px 28px;
+      background: var(--paper);
+      text-align: center;
+      transition: transform 0.3s;
+    }
+    .feature-card:hover { transform: translateY(-6px) rotate(-0.5deg); }
+    .feature-card canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+    }
+    .feature-card h3 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      font-size: 1.05rem;
+      opacity: 0.8;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.7;
+    }
+
+    /* ── STATS ── */
+    .stats {
+      padding: 80px 0;
+    }
+    .stats .container {
+      display: flex;
+      justify-content: center;
+      gap: 80px;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; position: relative; }
+    .stat-number {
+      font-family: 'Caveat', cursive;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-label {
+      font-size: 1.1rem;
+      opacity: 0.7;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials {
+      padding: 100px 0;
+    }
+    .testimonials h2 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 60px;
+    }
+    .testimonials h2 span { color: var(--accent3); }
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 36px;
+    }
+    .testimonial-card {
+      position: relative;
+      padding: 32px;
+      background: var(--paper);
+    }
+    .testimonial-card canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .testimonial-card .quote {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      font-style: italic;
+      position: relative;
+      z-index: 1;
+    }
+    .testimonial-card .quote::before {
+      content: '"';
+      font-family: 'Caveat', cursive;
+      font-size: 4rem;
+      color: var(--accent);
+      position: absolute;
+      top: -20px;
+      left: -8px;
+      opacity: 0.4;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .testimonial-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .testimonial-name { font-weight: 600; }
+    .testimonial-role { font-size: 0.9rem; opacity: 0.6; font-family: 'Inter', sans-serif; }
+
+    /* ── CTA ── */
+    .cta {
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+    }
+    .cta-box {
+      position: relative;
+      padding: 64px 40px;
+      background: var(--paper);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .cta-box canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-size: 2.8rem;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .cta-box p {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+      font-family: 'Inter', sans-serif;
+    }
+    .cta-box .btn-primary { position: relative; z-index: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 48px 0 32px;
+      text-align: center;
+      position: relative;
+    }
+    footer p {
+      opacity: 0.5;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 16px;
+      list-style: none;
+    }
+    .footer-links a {
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 1rem;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .footer-links a:hover { opacity: 1; }
+
+    /* ── ANIMATIONS ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── FLOATING DOODLES ── */
+    .doodle {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.15;
+      z-index: 0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero .container { grid-template-columns: 1fr; text-align: center; }
+      .hero-text p { margin: 0 auto 32px; }
+      .hero-btns { justify-content: center; }
+      .hero-canvas-wrap { max-width: 360px; margin: 0 auto; }
+      .stats .container { gap: 40px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <div class="container">
+    <a href="#" class="logo">✏️ Sketchpad</a>
+    <ul class="nav-links">
+      <li><a href="#features">Özellikler</a></li>
+      <li><a href="#testimonials">Yorumlar</a></li>
+      <li><a href="#cta" class="nav-cta">Hemen Başla</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-text fade-up">
+      <h1>Fikirlerini <span>el yazısıyla</span> hayata geçir</h1>
+      <p>Sketchpad ile notlarını, wireframe'lerini ve piksel-perfekt olmayan harika tasarımlarını elle çizin. Dijital dünyanın en doğal hali.</p>
+      <div class="hero-btns">
+        <a href="#cta" class="btn-primary">Ücretsiz Dene →</a>
+        <a href="#features" class="btn-secondary">Nasıl Çalışır?</a>
+      </div>
+    </div>
+    <div class="hero-canvas-wrap fade-up" style="transition-delay:.15s">
+      <canvas id="heroCanvas"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FEATURES ═══════════ -->
+<section class="features" id="features">
+  <div class="container">
+    <h2 class="fade-up">Neden <span>Sketchpad</span>?</h2>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <canvas class="card-canvas"></canvas>
+        <svg class="feature-icon" id="iconPen" viewBox="0 0 64 64"></svg>
+        <h3>El Çizimi Araçlar</h3>
+        <p>Kalem, fırça ve keçeli kalem ile doğal hissettiren çizimler yap. Rough.js motoru her çizgiyi benzersiz kılar.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay:.1s">
+        <canvas class="card-canvas"></canvas>
+        <svg class="feature-icon" id="iconGrid" viewBox="0 0 64 64"></svg>
+        <h3>Akıllı Izgara</h3>
+        <p>Serbest çizim ile yapısal düzenin gücünü birleştir. manyetik ızgara sayesinde hizalama sorun olmaktan çıkar.</p>
+      </div>
+      <div class="feature-card fade-up" style="transition-delay:.2s">
+        <canvas class="card-canvas"></canvas>
+        <svg class="feature-icon" id="iconShare" viewBox="0 0 64 64"></svg>
+        <h3>Anında Paylaş</h3>
+        <p>Tasarımlarını PNG, SVG veya canlı link olarak paylaş. ekibinle gerçek zamanlı işbirliği yap.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ STATS ═══════════ -->
+<section class="stats">
+  <div class="container">
+    <div class="stat-item fade-up">
+      <div class="stat-number" data-target="12847">0</div>
+      <div class="stat-label">Aktif Kullanıcı</div>
+    </div>
+    <div class="stat-item fade-up" style="transition-delay:.1s">
+      <div class="stat-number" data-target="342190">0</div>
+      <div class="stat-label">Çizilen Şekil</div>
+    </div>
+    <div class="stat-item fade-up" style="transition-delay:.2s">
+      <div class="stat-number" data-target="99">0</div>
+      <div class="stat-label">Memnuniyet %</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TESTIMONIALS ═══════════ -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <h2 class="fade-up">Kullanıcılar <span>Ne Diyor?</span></h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-card fade-up">
+        <canvas class="card-canvas"></canvas>
+        <p class="quote">Wireframe çizerken en büyük yardımcım oldu. Elle çizilmiş hissi müşterilerime çok iyi sunuyor.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">AY</div>
+          <div>
+            <div class="testimonial-name">Ayşe Yılmaz</div>
+            <div class="testimonial-role">UI/UX Tasarımcı</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-up" style="transition-delay:.1s">
+        <canvas class="card-canvas"></canvas>
+        <p class="quote">Öğretmen olarak derslerimde kullanıyorum. Öğrenciler el yazısı notları dijital ortama taşırken çok eğleniyor.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">MK</div>
+          <div>
+            <div class="testimonial-name">Mehmet Kaya</div>
+            <div class="testimonial-role">Eğitmen</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-up" style="transition-delay:.2s">
+        <canvas class="card-canvas"></canvas>
+        <p class="quote">Startup'ımızın pitch deck'lerini elle çiziyoruz. Yatırımcılar bu doğal tarafa bayılıyor!</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">ZD</div>
+          <div>
+            <div class="testimonial-name">Zeynep Demir</div>
+            <div class="testimonial-role">Kurucu, NotaApp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CTA ═══════════ -->
+<section class="cta" id="cta">
+  <div class="container">
+    <div class="cta-box fade-up">
+      <canvas class="card-canvas"></canvas>
+      <h2>Hadi, ilk çizgini at! ✏️</h2>
+      <p>Kredi kartı gerekmez. Hemen ücretsiz hesabını oluştur ve el yazısı dijital dünyaya adım at.</p>
+      <a href="#" class="btn-primary">Ücretsiz Hesap Oluştur</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <ul class="footer-links">
+    <li><a href="#">Hakkında</a></li>
+    <li><a href="#">Blog</a></li>
+    <li><a href="#">Destek</a></li>
+    <li><a href="#">Gizlilik</a></li>
+  </ul>
+  <p>© 2026 Sketchpad — Rough.js ile ❤️ kullanılarak yapıldı</p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ROUGH.JS DRAWING ENGINE
+// ═══════════════════════════════════════════════════════
+
+const PALETTE = {
+  ink: '#2d2926',
+  accent: '#e85d40',
+  accent2: '#4a90d9',
+  accent3: '#5cb85c',
+  light: '#d4c5a9',
+};
+
+function initRough(canvas, options = {}) {
+  const rc = rough.canvas(canvas);
+  return rc;
+}
+
+function sizeCanvas(canvas) {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { w: rect.width, h: rect.height, dpr };
+}
+
+// ── HERO CANVAS ──
+function drawHero() {
+  const canvas = document.getElementById('heroCanvas');
+  const { w, h } = sizeCanvas(canvas);
+  const rc = initRough(canvas);
+
+  // Big sketchy monitor
+  const mx = w * 0.12, my = h * 0.15;
+  const mw = w * 0.76, mh = h * 0.55;
+  rc.rectangle(mx, my, mw, mh, { roughness: 1.8, stroke: PALETTE.ink, strokeWidth: 2.5 });
+  // Screen
+  rc.rectangle(mx + 16, my + 16, mw - 32, mh - 40, { fill: '#fff9f0', fillStyle: 'cross-hatch', fillWeight: 0.6, roughness: 1.2, stroke: PALETTE.ink, strokeWidth: 1.5 });
+  // Stand
+  rc.line(mx + mw / 2 - 30, my + mh, mx + mw / 2 - 40, my + mh + 40, { roughness: 1.5, stroke: PALETTE.ink, strokeWidth: 2 });
+  rc.line(mx + mw / 2 + 30, my + mh, mx + mw / 2 + 40, my + mh + 40, { roughness: 1.5, stroke: PALETTE.ink, strokeWidth: 2 });
+  rc.line(mx + mw / 2 - 60, my + mh + 40, mx + mw / 2 + 60, my + mh + 40, { roughness: 1.8, stroke: PALETTE.ink, strokeWidth: 2.5 });
+
+  // Content inside screen
+  // Title line
+  rc.line(mx + 44, my + 50, mx + mw - 80, my + 50, { roughness: 1.2, stroke: PALETTE.accent, strokeWidth: 3 });
+  // Subtitle lines
+  rc.line(mx + 44, my + 74, mx + mw - 100, my + 74, { roughness: 1, stroke: PALETTE.light, strokeWidth: 2 });
+  rc.line(mx + 44, my + 94, mx + mw - 140, my + 94, { roughness: 1, stroke: PALETTE.light, strokeWidth: 2 });
+
+  // Sketchy card 1
+  rc.rectangle(mx + 40, my + 114, mw * 0.38, mh * 0.38, { roughness: 1.4, stroke: PALETTE.accent2, strokeWidth: 1.5, fill: 'rgba(74,144,217,0.06)', fillStyle: 'solid' });
+  // Sketchy card 2
+  rc.rectangle(mx + mw * 0.52, my + 114, mw * 0.38, mh * 0.38, { roughness: 1.4, stroke: PALETTE.accent3, strokeWidth: 1.5, fill: 'rgba(92,184,92,0.06)', fillStyle: 'solid' });
+
+  // Pencil doodle on left
+  rc.line(mx + 56, my + 140, mx + 56, my + 200, { roughness: 1.5, stroke: PALETTE.accent, strokeWidth: 2 });
+  rc.polygon([[mx + 56, my + 200], [mx + 50, my + 220], [mx + 62, my + 220]], { roughness: 1, fill: PALETTE.accent, fillStyle: 'solid', stroke: PALETTE.accent, strokeWidth: 1 });
+
+  // Star doodle on right card
+  const sx = mx + mw * 0.68, sy = my + 155;
+  const starPoints = [];
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 72 - 90) * Math.PI / 180;
+    starPoints.push([sx + Math.cos(angle) * 18, sy + Math.sin(angle) * 18]);
+    const angle2 = ((i * 72 + 36) - 90) * Math.PI / 180;
+    starPoints.push([sx + Math.cos(angle2) * 8, sy + Math.sin(angle2) * 8]);
+  }
+  rc.polygon(starPoints, { roughness: 1.6, fill: PALETTE.accent, fillStyle: 'solid', stroke: PALETTE.ink, strokeWidth: 1.2 });
+
+  // Underline doodle
+  rc.arc(mx + mw * 0.2, my + mh * 0.92, mw * 0.5, 20, Math.PI * 0.1, Math.PI * 0.9, false, { roughness: 2, stroke: PALETTE.accent, strokeWidth: 2 });
+
+  // Floating shapes
+  rc.circle(w - 40, 60, 30, { roughness: 2, stroke: PALETTE.accent2, strokeWidth: 1.5, fill: 'rgba(74,144,217,0.1)', fillStyle: 'cross-hatch' });
+  rc.circle(50, h - 60, 22, { roughness: 2, stroke: PALETTE.accent3, strokeWidth: 1.5 });
+  rc.rectangle(w - 80, h - 70, 24, 24, { roughness: 2, stroke: PALETTE.accent, strokeWidth: 1.5, fill: 'rgba(232,93,64,0.1)', fillStyle: 'solid' });
+}
+
+// ── FEATURE ICONS (inside SVGs drawn with rough) ──
+function drawIconPen() {
+  const svg = document.getElementById('iconPen');
+  const rc = rough.svg(svg);
+  svg.appendChild(rc.line(20, 50, 44, 10, { stroke: PALETTE.accent, strokeWidth: 2.5, roughness: 1.2 }));
+  svg.appendChild(rc.polygon([[44, 10], [48, 4], [52, 8], [48, 12]], { fill: PALETTE.accent, fillStyle: 'solid', stroke: PALETTE.ink, strokeWidth: 1, roughness: 1 }));
+  svg.appendChild(rc.line(20, 50, 16, 56, { stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1 }));
+  svg.appendChild(rc.arc(32, 40, 20, 10, 0, Math.PI, false, { stroke: PALETTE.accent2, strokeWidth: 1.5, roughness: 1.5 }));
+}
+
+function drawIconGrid() {
+  const svg = document.getElementById('iconGrid');
+  const rc = rough.svg(svg);
+  // Grid lines
+  for (let i = 1; i <= 3; i++) {
+    svg.appendChild(rc.line(12, 12 + i * 12, 52, 12 + i * 12, { stroke: PALETTE.light, strokeWidth: 1.5, roughness: 1.2 }));
+    svg.appendChild(rc.line(12 + i * 12, 12, 12 + i * 12, 52, { stroke: PALETTE.light, strokeWidth: 1.5, roughness: 1.2 }));
+  }
+  // Outer box
+  svg.appendChild(rc.rectangle(12, 12, 40, 40, { stroke: PALETTE.accent2, strokeWidth: 2, roughness: 1.5 }));
+  // Checkmark
+  svg.appendChild(rc.line(22, 32, 30, 40, { stroke: PALETTE.accent3, strokeWidth: 2.5, roughness: 1 }));
+  svg.appendChild(rc.line(30, 40, 42, 22, { stroke: PALETTE.accent3, strokeWidth: 2.5, roughness: 1 }));
+}
+
+function drawIconShare() {
+  const svg = document.getElementById('iconShare');
+  const rc = rough.svg(svg);
+  // Circle nodes
+  svg.appendChild(rc.circle(32, 18, 14, { fill: PALETTE.accent, fillStyle: 'solid', stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1.2 }));
+  svg.appendChild(rc.circle(16, 48, 14, { fill: PALETTE.accent2, fillStyle: 'solid', stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1.2 }));
+  svg.appendChild(rc.circle(48, 48, 14, { fill: PALETTE.accent3, fillStyle: 'solid', stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1.2 }));
+  // Lines
+  svg.appendChild(rc.line(28, 26, 20, 42, { stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1.3 }));
+  svg.appendChild(rc.line(36, 26, 44, 42, { stroke: PALETTE.ink, strokeWidth: 1.5, roughness: 1.3 }));
+}
+
+// ── FEATURE CARDS ──
+function drawCardBorders() {
+  document.querySelectorAll('.card-canvas').forEach(canvas => {
+    const { w, h } = sizeCanvas(canvas);
+    const rc = initRough(canvas);
+    rc.rectangle(4, 4, w - 8, h - 8, {
+      roughness: 2,
+      stroke: PALETTE.ink,
+      strokeWidth: 2,
+      fill: 'transparent',
+    });
+    // Corner doodle
+    rc.arc(w - 20, 12, 16, 16, Math.PI * 1.5, Math.PI * 2, false, { roughness: 1.5, stroke: PALETTE.accent, strokeWidth: 1.5 });
+  });
+}
+
+// ── CTA BOX ──
+function drawCTABox() {
+  const box = document.querySelector('.cta-box');
+  const canvas = box.querySelector('.card-canvas');
+  const { w, h } = sizeCanvas(canvas);
+  const rc = initRough(canvas);
+
+  // Double border
+  rc.rectangle(6, 6, w - 12, h - 12, { roughness: 2.2, stroke: PALETTE.ink, strokeWidth: 2.5 });
+  rc.rectangle(14, 14, w - 28, h - 28, { roughness: 1.8, stroke: PALETTE.accent, strokeWidth: 1.5, strokeDasharray: [8, 6] });
+
+  // Corner stars
+  const corners = [[24, 24], [w - 24, 24], [24, h - 24], [w - 24, h - 24]];
+  corners.forEach(([cx, cy]) => {
+    rc.circle(cx, cy, 10, { roughness: 1.5, fill: PALETTE.accent, fillStyle: 'solid', stroke: 'none' });
+  });
+}
+
+// ── SCROLL ANIMATIONS ──
+function revealAboveViewport() {
+  document.querySelectorAll('.fade-up:not(.visible)').forEach(el => {
+    if (el.getBoundingClientRect().bottom < window.innerHeight) el.classList.add('visible');
+  });
+}
+
+function initScrollObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  revealAboveViewport();
+}
+
+window.addEventListener('hashchange', revealAboveViewport);
+
+// ── COUNTER ANIMATION ──
+function animateCounters() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.target);
+        let current = 0;
+        const step = Math.ceil(target / 60);
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(timer);
+          }
+          el.textContent = current.toLocaleString('tr-TR');
+        }, 25);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-number').forEach(el => observer.observe(el));
+}
+
+// ── SCROLL-DRAWN DECORATIONS ──
+function drawDecorations() {
+  // Add small doodles between sections
+  const sections = document.querySelectorAll('section');
+  sections.forEach((section, i) => {
+    if (i === 0) return;
+    const doodle = document.createElement('div');
+    doodle.className = 'doodle';
+    doodle.style.top = '-30px';
+    doodle.style.left = '50%';
+    doodle.style.transform = 'translateX(-50%)';
+    const cvs = document.createElement('canvas');
+    cvs.width = 200;
+    cvs.height = 60;
+    cvs.style.width = '200px';
+    cvs.style.height = '60px';
+    doodle.appendChild(cvs);
+    section.prepend(doodle);
+
+    const rc = rough.canvas(cvs);
+    if (i % 3 === 0) {
+      rc.line(10, 30, 190, 30, { roughness: 2, stroke: PALETTE.light, strokeWidth: 1.5 });
+      rc.circle(100, 30, 12, { fill: PALETTE.accent, fillStyle: 'solid', stroke: 'none', roughness: 1 });
+    } else if (i % 3 === 1) {
+      rc.line(30, 30, 170, 30, { roughness: 2.5, stroke: PALETTE.light, strokeWidth: 1.5, strokeLineDash: [4, 8] });
+      rc.rectangle(90, 22, 16, 16, { fill: PALETTE.accent2, fillStyle: 'cross-hatch', stroke: PALETTE.accent2, strokeWidth: 1, roughness: 1.5 });
+    } else {
+      rc.arc(100, 30, 60, 20, 0, Math.PI, false, { roughness: 2, stroke: PALETTE.accent3, strokeWidth: 1.5 });
+      rc.line(70, 30, 130, 30, { roughness: 1.5, stroke: PALETTE.light, strokeWidth: 1 });
+    }
+  });
+}
+
+// ── HOVER ROUGH EFFECT ON BUTTONS ──
+function initButtonEffects() {
+  document.querySelectorAll('.btn-primary, .btn-secondary, .nav-cta').forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+      btn.style.filter = `drop-shadow(2px 3px 0 ${PALETTE.light})`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.filter = 'none';
+    });
+  });
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  drawHero();
+  drawIconPen();
+  drawIconGrid();
+  drawIconShare();
+  drawCardBorders();
+  drawCTABox();
+  drawDecorations();
+  initScrollObserver();
+  animateCounters();
+  initButtonEffects();
+});
+
+window.addEventListener('resize', () => {
+  drawHero();
+  drawCardBorders();
+  drawCTABox();
+});
+</script>
+</body>
+</html>
