@@ -690,6 +690,10 @@ function revealAboveViewport() {
   document.querySelectorAll('.fade-up:not(.visible)').forEach(el => {
     if (el.getBoundingClientRect().bottom < window.innerHeight) el.classList.add('visible');
   });
+  document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+    if (el.getBoundingClientRect().bottom < window.innerHeight)
+      el.textContent = parseInt(el.dataset.target).toLocaleString('tr-TR');
+  });
 }
 
 function initScrollObserver() {
