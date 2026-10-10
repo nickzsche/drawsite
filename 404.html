@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Sayfa Bulunamadı | Sketchpad</title>
+  <meta name="description" content="Aradığınız sayfa bulunamadı." />
+  <meta name="theme-color" content="#fdf6ec" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Patrick+Hand&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      font-family: 'Patrick Hand', cursive;
+      background: #fdf6ec;
+      color: #2d2926;
+      background-image: repeating-linear-gradient(
+        transparent, transparent 31px,
+        rgba(74, 144, 217, 0.08) 31px, rgba(74, 144, 217, 0.08) 32px
+      );
+    }
+    .doodle { width: 140px; height: 140px; margin-bottom: 8px; }
+    h1 { font-family: 'Caveat', cursive; font-size: clamp(3rem, 12vw, 5rem); line-height: 1; color: #e85d40; }
+    p { font-size: 1.25rem; opacity: 0.8; margin: 12px 0 28px; max-width: 420px; }
+    a {
+      display: inline-block;
+      padding: 12px 32px;
+      background: #e85d40;
+      color: #fff;
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: transform 0.2s;
+    }
+    a:hover, a:focus-visible { transform: rotate(-2deg) scale(1.05); }
+    :focus-visible { outline: 3px solid #4a90d9; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+      a:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="doodle" viewBox="0 0 140 140" aria-hidden="true" focusable="false">
+    <!-- sketchy broken pencil / lost page -->
+    <path d="M30 110 Q70 104 110 110" stroke="#d4c5a9" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M45 30 L95 80" stroke="#2d2926" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M95 80 L88 92 L76 84 Z" fill="#e85d40"/>
+    <path d="M40 84 Q70 76 100 84" stroke="#4a90d9" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="108" cy="40" r="9" fill="#5cb85c" opacity="0.85"/>
+    <circle cx="32" cy="52" r="6" stroke="#e85d40" stroke-width="2.5" fill="none"/>
+  </svg>
+  <h1>404</h1>
+  <p>Ups! Aradığın sayfa bu kâğıtta yok gibi görünüyor. Belki karalanmış, belki hiç çizilmemiş.</p>
+  <a href="/">✏️ Ana Sayfaya Dön</a>
+</body>
+</html>
