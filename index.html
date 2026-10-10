@@ -4,12 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sketchpad — Düşüncelerini Çiz</title>
-  <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.min.js"></script>
+  <meta name="description" content="Sketchpad, Rough.js ile el çizimi tarzında çizilen, not defteri hissi veren dijital çizim ve wireframe deneyimi. Notlarını ve fikirlerini el yazısıyla hayata geçir." />
+  <meta name="author" content="nickzsche" />
+  <meta name="theme-color" content="#fdf6ec" />
+  <meta name="color-scheme" content="light" />
+  <link rel="canonical" href="https://nickzsche.github.io/drawsite/" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Sketchpad" />
+  <meta property="og:title" content="Sketchpad — Düşüncelerini Çiz" />
+  <meta property="og:description" content="Rough.js ile çizilmiş el çizimi tarzında, not defteri hissi veren dijital çizim ve wireframe deneyimi." />
+  <meta property="og:url" content="https://nickzsche.github.io/drawsite/" />
+  <meta property="og:image" content="https://nickzsche.github.io/drawsite/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="tr_TR" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sketchpad — Düşüncelerini Çiz" />
+  <meta name="twitter:description" content="Rough.js ile çizilmiş el çizimi tarzında, not defteri hissi veren dijital çizim ve wireframe deneyimi." />
+  <meta name="twitter:image" content="https://nickzsche.github.io/drawsite/assets/og-image.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.min.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    /* Accessibility: visible keyboard focus */
+    :focus-visible { outline: 3px solid var(--accent2); outline-offset: 3px; border-radius: 3px; }
+
+    /* Accessibility: skip link */
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      z-index: 1000;
+      padding: 10px 18px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 0 0 6px 0;
+      text-decoration: none;
+      font-family: 'Patrick Hand', cursive;
+      font-size: 1.1rem;
+    }
+    .skip-link:focus { left: 0; }
 
     :root {
       --bg: #fdf6ec;
@@ -386,23 +432,42 @@
       .hero-btns { justify-content: center; }
       .hero-canvas-wrap { max-width: 360px; margin: 0 auto; }
       .stats .container { gap: 40px; }
-      .nav-links { display: none; }
+      /* Keep the primary CTA reachable on small screens instead of hiding all nav */
+      .nav-links { gap: 14px; }
+      .nav-links li:not(.nav-cta-item) { display: none; }
+      .features h2, .testimonials h2 { font-size: 2.2rem; }
+      .cta-box { padding: 48px 24px; }
+    }
+
+    /* ── REDUCED MOTION ── */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .fade-up { opacity: 1 !important; transform: none !important; }
     }
   </style>
 </head>
 <body>
 
+<a class="skip-link" href="#main">İçeriğe geç</a>
+
 <!-- ═══════════ NAV ═══════════ -->
-<nav>
+<nav aria-label="Ana gezinme">
   <div class="container">
-    <a href="#" class="logo">✏️ Sketchpad</a>
+    <a href="#main" class="logo" aria-label="Sketchpad — ana sayfa">✏️ Sketchpad</a>
     <ul class="nav-links">
       <li><a href="#features">Özellikler</a></li>
       <li><a href="#testimonials">Yorumlar</a></li>
-      <li><a href="#cta" class="nav-cta">Hemen Başla</a></li>
+      <li class="nav-cta-item"><a href="#cta" class="nav-cta">Hemen Başla</a></li>
     </ul>
   </div>
 </nav>
+
+<main id="main">
 
 <!-- ═══════════ HERO ═══════════ -->
 <section class="hero">
@@ -416,7 +481,7 @@
       </div>
     </div>
     <div class="hero-canvas-wrap fade-up" style="transition-delay:.15s">
-      <canvas id="heroCanvas"></canvas>
+      <canvas id="heroCanvas" aria-hidden="true"></canvas>
     </div>
   </div>
 </section>
@@ -427,20 +492,20 @@
     <h2 class="fade-up">Neden <span>Sketchpad</span>?</h2>
     <div class="features-grid">
       <div class="feature-card fade-up">
-        <canvas class="card-canvas"></canvas>
-        <svg class="feature-icon" id="iconPen" viewBox="0 0 64 64"></svg>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
+        <svg class="feature-icon" aria-hidden="true" focusable="false" id="iconPen" viewBox="0 0 64 64"></svg>
         <h3>El Çizimi Araçlar</h3>
         <p>Kalem, fırça ve keçeli kalem ile doğal hissettiren çizimler yap. Rough.js motoru her çizgiyi benzersiz kılar.</p>
       </div>
       <div class="feature-card fade-up" style="transition-delay:.1s">
-        <canvas class="card-canvas"></canvas>
-        <svg class="feature-icon" id="iconGrid" viewBox="0 0 64 64"></svg>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
+        <svg class="feature-icon" aria-hidden="true" focusable="false" id="iconGrid" viewBox="0 0 64 64"></svg>
         <h3>Akıllı Izgara</h3>
         <p>Serbest çizim ile yapısal düzenin gücünü birleştir. manyetik ızgara sayesinde hizalama sorun olmaktan çıkar.</p>
       </div>
       <div class="feature-card fade-up" style="transition-delay:.2s">
-        <canvas class="card-canvas"></canvas>
-        <svg class="feature-icon" id="iconShare" viewBox="0 0 64 64"></svg>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
+        <svg class="feature-icon" aria-hidden="true" focusable="false" id="iconShare" viewBox="0 0 64 64"></svg>
         <h3>Anında Paylaş</h3>
         <p>Tasarımlarını PNG, SVG veya canlı link olarak paylaş. ekibinle gerçek zamanlı işbirliği yap.</p>
       </div>
@@ -472,7 +537,7 @@
     <h2 class="fade-up">Kullanıcılar <span>Ne Diyor?</span></h2>
     <div class="testimonial-grid">
       <div class="testimonial-card fade-up">
-        <canvas class="card-canvas"></canvas>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
         <p class="quote">Wireframe çizerken en büyük yardımcım oldu. Elle çizilmiş hissi müşterilerime çok iyi sunuyor.</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">AY</div>
@@ -483,7 +548,7 @@
         </div>
       </div>
       <div class="testimonial-card fade-up" style="transition-delay:.1s">
-        <canvas class="card-canvas"></canvas>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
         <p class="quote">Öğretmen olarak derslerimde kullanıyorum. Öğrenciler el yazısı notları dijital ortama taşırken çok eğleniyor.</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">MK</div>
@@ -494,7 +559,7 @@
         </div>
       </div>
       <div class="testimonial-card fade-up" style="transition-delay:.2s">
-        <canvas class="card-canvas"></canvas>
+        <canvas class="card-canvas" aria-hidden="true"></canvas>
         <p class="quote">Startup'ımızın pitch deck'lerini elle çiziyoruz. Yatırımcılar bu doğal tarafa bayılıyor!</p>
         <div class="testimonial-author">
           <div class="testimonial-avatar">ZD</div>
@@ -512,13 +577,15 @@
 <section class="cta" id="cta">
   <div class="container">
     <div class="cta-box fade-up">
-      <canvas class="card-canvas"></canvas>
+      <canvas class="card-canvas" aria-hidden="true"></canvas>
       <h2>Hadi, ilk çizgini at! ✏️</h2>
       <p>Kredi kartı gerekmez. Hemen ücretsiz hesabını oluştur ve el yazısı dijital dünyaya adım at.</p>
       <a href="#" class="btn-primary">Ücretsiz Hesap Oluştur</a>
     </div>
   </div>
 </section>
+
+</main>
 
 <!-- ═══════════ FOOTER ═══════════ -->
 <footer>
@@ -748,6 +815,7 @@ function drawDecorations() {
     doodle.style.left = '50%';
     doodle.style.transform = 'translateX(-50%)';
     const cvs = document.createElement('canvas');
+    cvs.setAttribute('aria-hidden', 'true');
     cvs.width = 200;
     cvs.height = 60;
     cvs.style.width = '200px';
@@ -796,9 +864,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', () => {
-  drawHero();
-  drawCardBorders();
-  drawCTABox();
+  clearTimeout(window.__resizeTimer);
+  window.__resizeTimer = setTimeout(() => {
+    drawHero();
+    drawCardBorders();
+    drawCTABox();
+  }, 150);
 });
 </script>
 </body>
