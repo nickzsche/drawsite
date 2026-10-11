@@ -753,13 +753,16 @@ function drawCTABox() {
 }
 
 // ── SCROLL ANIMATIONS ──
+function setCounterFinal(el) {
+  el.textContent = parseInt(el.dataset.target).toLocaleString('tr-TR');
+}
+
 function revealAboveViewport() {
   document.querySelectorAll('.fade-up:not(.visible)').forEach(el => {
     if (el.getBoundingClientRect().bottom < window.innerHeight) el.classList.add('visible');
   });
   document.querySelectorAll('.stat-number[data-target]').forEach(el => {
-    if (el.getBoundingClientRect().bottom < window.innerHeight)
-      el.textContent = parseInt(el.dataset.target).toLocaleString('tr-TR');
+    if (el.getBoundingClientRect().bottom < window.innerHeight) setCounterFinal(el);
   });
 }
 
@@ -780,6 +783,12 @@ window.addEventListener('hashchange', revealAboveViewport);
 
 // ── COUNTER ANIMATION ──
 function animateCounters() {
+  // Reduced motion: show the final values immediately, skip the count-up.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.stat-number[data-target]').forEach(setCounterFinal);
+    return;
+  }
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {

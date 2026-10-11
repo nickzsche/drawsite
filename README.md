@@ -83,6 +83,8 @@ drawsite/
 ├── assets/
 │   ├── favicon.svg     # Tarayıcı sekmesi ikonu (el çizimi kalem)
 │   └── og-image.png    # Sosyal medya paylaşım görseli (Open Graph)
+├── tests/
+│   └── smoke.test.mjs  # Bağımlılıksız smoke test (node --test)
 ├── README.md           # Bu dosya
 └── .gitignore
 ```
@@ -119,9 +121,21 @@ Renk paletini `index.html` içindeki `:root` bloğundan değiştirebilirsiniz:
 - Anlamsal işaretleme: `nav`, `main`, `section`, `footer` ve `aria-label` kullanılır.
 - Dekoratif tüm `<canvas>` ve ikonlar ekran okuyuculardan `aria-hidden` ile gizlenir.
 - Klavye kullanıcıları için "İçeriğe geç" (skip link) ve görünür odak halkaları.
-- `prefers-reduced-motion` tercihine saygı duyulur; hareket azaltıldığında animasyonlar kapatılır.
+- `prefers-reduced-motion` tercihine saygı duyulur; hareket azaltıldığında animasyonlar **ve sayaç sayımı** kapatılır (sayaçlar hedef değeri anında gösterir).
 - Rough.js betiği `defer` ile yüklenir; CDN için önceden bağlantı (preconnect) kurulur.
 - Pencere yeniden boyutlandırma, çizimleri tekrar tetiklemeden önce geciktirilir (debounce).
+
+---
+
+## 🧪 Test
+
+Bağımlılık gerektirmeyen smoke testleri Node'un dahili test çalıştırıcısıyla koşar (yeni paket yok):
+
+```bash
+node --test tests/*.test.mjs
+```
+
+Test, `index.html` içindeki satır içi betiği minimal bir DOM taklidi içinde çalıştırır ve `prefers-reduced-motion` davranışını doğrular.
 
 ---
 
